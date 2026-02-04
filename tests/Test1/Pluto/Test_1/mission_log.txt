@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Pluto
+target_apoapsis: 295.78
+safety_margin: 46.16
+propellant: liquid
+dry_mass: 1299.67
+fuel_mass: 269640.54
+--------------------
+Outcome: CRASHED
+Flight Time: 10543.7 s
+Max Altitude: 342979.86 m
+Achieved Apoapsis: 342.98 km
+Max Q: 0.0 Pa
+Fuel Remaining: 174370.62 kg

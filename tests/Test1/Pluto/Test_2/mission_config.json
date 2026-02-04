@@ -1,0 +1,8 @@
+{
+    "planet": "Pluto",
+    "target_apoapsis": 248.32,
+    "safety_margin": 49.75,
+    "propellant": "liquid",
+    "dry_mass": 1914.18,
+    "fuel_mass": 295336.9
+}

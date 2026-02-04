@@ -1,0 +1,8 @@
+{
+    "planet": "Earth",
+    "target_apoapsis": 68.32,
+    "safety_margin": 46.44,
+    "propellant": "solid",
+    "dry_mass": 413.79,
+    "fuel_mass": 295105.82
+}

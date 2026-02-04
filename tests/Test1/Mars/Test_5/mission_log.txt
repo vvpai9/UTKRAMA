@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Mars
+target_apoapsis: 276.85
+safety_margin: 40.79
+propellant: solid
+dry_mass: 1859.36
+fuel_mass: 216172.71
+--------------------
+Outcome: LANDED
+Flight Time: 1785.0 s
+Max Altitude: 71132.61 m
+Achieved Apoapsis: 71.13 km
+Max Q: 8525.34 Pa
+Fuel Remaining: 0.0 kg

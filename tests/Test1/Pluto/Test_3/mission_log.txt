@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Pluto
+target_apoapsis: 229.72
+safety_margin: 25.73
+propellant: solid
+dry_mass: 200.87
+fuel_mass: 479214.8
+--------------------
+Outcome: THRUSTING
+Flight Time: 20000.1 s
+Max Altitude: 6044958.28 m
+Achieved Apoapsis: 6044.96 km
+Max Q: 0.0 Pa
+Fuel Remaining: 0.0 kg

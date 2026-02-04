@@ -1,0 +1,8 @@
+{
+    "planet": "Mars",
+    "target_apoapsis": 70.21,
+    "safety_margin": 33.07,
+    "propellant": "liquid",
+    "dry_mass": 430.85,
+    "fuel_mass": 224041.16
+}

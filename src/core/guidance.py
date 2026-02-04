@@ -37,11 +37,11 @@ class GuidanceSystem:
                     self.log_callback(f"CLG INIT at Altitude {altitude:.0f}m")
                 return self._closed_loop_guidance(rocket, altitude, velocity_vector)
             else:
-                return self._open_loop_guidance(altitude, rocket.propellant_type, planet)
+                return self._open_loop_guidance(altitude, rocket.propellant_type, planet, velocity_vector)
         else:
             return self._closed_loop_guidance(rocket, altitude, velocity_vector)
 
-    def _open_loop_guidance(self, altitude, propellant_type="liquid", planet=None):
+    def _open_loop_guidance(self, altitude, propellant_type="liquid", planet=None, velocity_vector=None):
         # Simple gravity turn profile
         
         turn_end_alt = 80000 # 80km default

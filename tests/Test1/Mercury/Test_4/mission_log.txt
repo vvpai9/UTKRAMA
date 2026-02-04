@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Mercury
+target_apoapsis: 133.38
+safety_margin: 31.67
+propellant: solid
+dry_mass: 763.06
+fuel_mass: 270379.0
+--------------------
+Outcome: CRASHED
+Flight Time: 795.1 s
+Max Altitude: 34751.82 m
+Achieved Apoapsis: 34.75 km
+Max Q: 0.0 Pa
+Fuel Remaining: 0.0 kg

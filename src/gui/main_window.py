@@ -8,7 +8,7 @@ from src.gui.dialogs import LaunchConfigDialog
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("2D Rocket Launch Simulator")
+        self.setWindowTitle("Vimana: 2D Rocket Simulator")
         self.setGeometry(100, 100, 1200, 800)
         
         self.simulation = Simulation()
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         grid = QGridLayout()
         central_widget.setLayout(grid)
         
-        # 1. Mini Console & Altitude vs Downrange (Top Left)
+        # 1. Mini Console (Top Left) - Removed Plot from here
         self.console_panel = QWidget()
         console_layout = QVBoxLayout()
         
@@ -42,31 +42,38 @@ class MainWindow(QMainWindow):
         self.events_log = QTextEdit()
         self.events_log.setReadOnly(True)
         self.events_log.setStyleSheet("font-family: Monospace; font-size: 10px; background-color: #222; color: #ddd;")
-        self.events_log.setMaximumHeight(150)
-        
-        self.alt_range_plot = PlotWidget("Altitude vs Downrange", "Downrange (m)", "Altitude (m)")
+        # Remove Fixed Height to allow it to fill console space
         
         console_layout.addWidget(self.telemetry_label)
         console_layout.addWidget(self.events_log)
-        console_layout.addWidget(self.alt_range_plot)
         self.console_panel.setLayout(console_layout)
         
-        # 2. External View (Top Right)
+        # 2. External View (Top Right - Spans 2 Cols)
         self.rocket_view = RocketView(self.simulation)
         
-        # 3. Time vs Altitude (Bottom Left)
-        self.time_alt_plot = PlotWidget("Time vs Altitude", "Time (s)", "Altitude (m)")
-        
-        # 4. Time vs Velocity (Bottom Right)
+        # 3. Graphs (Bottom Row)
+        self.alt_range_plot = PlotWidget("Altitude vs Downrange", "Downrange (km)", "Altitude (km)")
+        self.time_alt_plot = PlotWidget("Time vs Altitude", "Time (s)", "Altitude (km)")
         self.time_vel_plot = PlotWidget("Time vs Velocity", "Time (s)", "Velocity (m/s)")
         
-        # Add to Grid
+        # Add to Grid (2 Rows, 3 Cols)
+        # Top Row
         grid.addWidget(self.console_panel, 0, 0)
-        grid.addWidget(self.rocket_view, 0, 1)
-        grid.addWidget(self.time_alt_plot, 1, 0)
-        grid.addWidget(self.time_vel_plot, 1, 1)
+        grid.addWidget(self.rocket_view, 0, 1, 1, 2) # Row 0, Col 1, 1 Row, 2 Cols
         
-        # Control Dock (Bottom)
+        # Bottom Row
+        grid.addWidget(self.alt_range_plot, 1, 0)
+        grid.addWidget(self.time_alt_plot, 1, 1)
+        grid.addWidget(self.time_vel_plot, 1, 2)
+        
+        # Layout Stretches
+        grid.setRowStretch(0, 3) # Top row (Rocket + Console) gets 60%
+        grid.setRowStretch(1, 2) # Bottom row (Graphs) gets 40%
+        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
+        grid.setColumnStretch(2, 1)
+        
+        # Control Dock (Bottom - Row 2, Spans 3 Cols)
         control_panel = QFrame()
         control_layout = QHBoxLayout()
         
@@ -117,8 +124,8 @@ class MainWindow(QMainWindow):
         
         control_panel.setLayout(control_layout)
         
-        # Add Control Panel to layout (e.g. Row 2, spanning 2 columns)
-        grid.addWidget(control_panel, 2, 0, 1, 2)
+        # Add Control Panel to layout (Row 2, spanning 3 columns)
+        grid.addWidget(control_panel, 2, 0, 1, 3)
 
     def show_config_dialog(self):
         dialog = LaunchConfigDialog(self.simulation)
@@ -129,8 +136,18 @@ class MainWindow(QMainWindow):
                 cfg['planet'], cfg['apoapsis'], cfg['safety_margin'], cfg['dry_mass'], cfg['fuel_mass'], cfg['propellant']
             )
             self.simulation.guidance.set_logger(self.log_event)
+            self.simulation.set_logger(self.log_event)
             self.btn_launch.setEnabled(True)
             self.log_event(f"Mission Configured: Target Ap {cfg['apoapsis']}km, Planet {cfg['planet']}")
+            
+            # Reset Explosion Flag
+            self.rocket_view.exploded = False
+            # Force View Update to show rocket on pad
+            self.rocket_view.camera_locked = True
+            # Teleport Camera to Rocket (0, Radius)
+            r_pos = self.simulation.rocket.position
+            self.rocket_view.camera.teleport(r_pos[0], r_pos[1])
+            self.rocket_view.update()
             
             # Start Log File
             self.log_file_path = "mission_log.txt"
@@ -253,7 +270,9 @@ Downrange: {downrange/1000:.2f} km
 Status: {r.status}
 Fuel: {r.fuel_mass:.1f} kg
 Throttle: {r.engine.throttle*100:.0f}%
+Temp: {r.temperature - 273.15:.0f} C
 Dynamic Q: {q:.0f} Pa
+G-Load: {r.g_load:.2f} G (Max: {self.simulation.max_g_so_far:.2f} G)
 
 Target Apoapsis: {self.simulation.target_apoapsis/1000:.1f} km
 Predicted Apoapsis: {apo/1000:.1f} km
@@ -268,21 +287,34 @@ Achieved Apoapsis: {achieved/1000:.1f} km
             # Logic in simulation.py: "if int(self.time * 10) % 5 == 0" -> every 0.5s
             
             # Just push all new history to plots
-            self.time_alt_plot.update_data(physics_time, alt)
-            self.time_vel_plot.update_data(physics_time, vel)
-            self.alt_range_plot.update_data(downrange, alt)
+            self.time_alt_plot.update_data(physics_time, alt/1000.0)
+            self.time_vel_plot.update_data(physics_time, vel) # Vel remains m/s
+            self.alt_range_plot.update_data(downrange/1000.0, alt/1000.0)
         
         # Check specific events
         if r.status in ["CRASHED", "LANDED", "ABORT", "IMPACT DETECTED"]:
-            if self.timer.isActive():
-                 self.timer.stop()
-                 if r.status == "CRASHED":
-                     self.log_event("IMPACT DETECTED")
-                     QMessageBox.critical(self, "Failure", "Rocket Crashed!")
-                 elif r.status == "LANDED":
+            # Don't stop timer immediately on Crash/Abort, let animation play.
+            # Only stop if Landed? 
+            # Or just let it run. The simulation step returns early anyway.
+            
+            if r.status == "LANDED":
+                 if self.timer.isActive():
+                     self.timer.stop()
+                     self.simulation.determine_outcome() # Sets Outcome
                      self.log_event("TOUCHDOWN CONFIRMED")
                      QMessageBox.information(self, "Success", "Rocket Landed Safely!")
             
+            elif r.status in ["CRASHED", "ABORT"]:
+                 if self.timer.isActive():
+                     # Stop timer if animation done or user request?
+                     # Actually user wanted animation to play.
+                     # But we should determine outcome now.
+                     self.simulation.determine_outcome()
+                 
+                 # Just log once
+                 # Let animation play.
+                 pass
+
             self.btn_launch.setEnabled(False)
             self.btn_pause.setEnabled(False)
             self.btn_abort.setEnabled(False)

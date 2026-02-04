@@ -1,0 +1,8 @@
+{
+    "planet": "Moon",
+    "target_apoapsis": 234.28,
+    "safety_margin": 28.27,
+    "propellant": "liquid",
+    "dry_mass": 1249.46,
+    "fuel_mass": 82637.92
+}

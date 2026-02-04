@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Moon
+target_apoapsis: 78.3
+safety_margin: 39.97
+propellant: liquid
+dry_mass: 1727.61
+fuel_mass: 214827.77
+--------------------
+Outcome: CRASHED
+Flight Time: 3767.0 s
+Max Altitude: 118496.49 m
+Achieved Apoapsis: 118.5 km
+Max Q: 0.0 Pa
+Fuel Remaining: 92886.84 kg

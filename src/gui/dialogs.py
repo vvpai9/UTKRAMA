@@ -52,10 +52,10 @@ class LaunchConfigDialog(QDialog):
             planet = self.planet_combo.currentText()
             
             # Feasibility check should ideally include margin?
-            # User said "check whether such a mission is achievable".
+            # check whether such a mission is achievable".
             # We can check for (apo + margin)
             
-            is_feasible, rocket_dv, req_dv, extra = self.simulation.check_feasibility(
+            is_feasible, reason, rocket_dv, req_dv, extra = self.simulation.check_feasibility(
                 planet, apo + margin, dry, fuel, prop
             )
             
@@ -70,7 +70,10 @@ class LaunchConfigDialog(QDialog):
                 }
                 self.accept()
             else:
-                msg = f"""Impossible Mission!
+                if reason:
+                     msg = f"Impossible Mission!\n\nReason: {reason}"
+                else:
+                     msg = f"""Impossible Mission!
                 
 Calculated Rocket Delta-V: {rocket_dv:.2f} m/s
 Required Delta-V: {req_dv:.2f} m/s

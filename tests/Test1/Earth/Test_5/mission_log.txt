@@ -1,0 +1,15 @@
+MISSION LOG
+===========
+planet: Earth
+target_apoapsis: 81.35
+safety_margin: 32.6
+propellant: solid
+dry_mass: 945.31
+fuel_mass: 269656.45
+--------------------
+Outcome: LANDED
+Flight Time: 2210.8 s
+Max Altitude: 28844.30 m
+Achieved Apoapsis: 28.84 km
+Max Q: 495917.51 Pa
+Fuel Remaining: 0.0 kg

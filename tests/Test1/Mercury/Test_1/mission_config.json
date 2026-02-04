@@ -1,0 +1,8 @@
+{
+    "planet": "Mercury",
+    "target_apoapsis": 181.58,
+    "safety_margin": 30.83,
+    "propellant": "liquid",
+    "dry_mass": 241.36,
+    "fuel_mass": 133349.57
+}
