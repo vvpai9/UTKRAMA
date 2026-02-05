@@ -43,8 +43,8 @@ algorithms under realistic physical constraints.
 ## Getting Started
 
 ```bash
-git clone https://github.com/vvpai9/utkrama-simulation.git
-cd utkrama-simulation
+git clone https://github.com/vvpai9/UTKRAMA.git
+cd UTKRAMA
 pip install -r requirements.txt
 python main.py
 ```
