@@ -65,7 +65,6 @@ See ```LICENSE``` and ```CITATION.cff```
 | Aerodynamics | utkrama/src/core/physics.py |
 | Stability Analysis | utkrama/tests/test_stability.py |
 | Guidance Laws | utkrama/src/core/guidance.py |
-|--------------|---------------|
 
 ---
 
