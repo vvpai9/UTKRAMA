@@ -1,5 +1,5 @@
 # UTKRAMA
-**Unified Trajectory and Kinematics for Rocket Ascent Modeling and Analysis**
+**Unified Trajectory and Kinematics for Rocket Ascent and Mission Analysis**
 
 UTKRAMA is a physics-based, modular 2D launch vehicle simulation framework designed for guidance, control, and trajectory experimentation across multiple planetary environments. The framework integrates rigid-body dynamics, aerodynamic stability modeling, propulsion systems, closed-loop guidance, and automated experimentation tools.
 
