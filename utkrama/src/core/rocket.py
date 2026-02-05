@@ -3,6 +3,20 @@ import numpy as np
 
 @dataclass
 class Stage:
+    """Represents a single rocket stage with its physical and propulsive properties.
+
+    Attributes:
+        dry_mass (float): The mass of the stage structure without fuel in kg.
+        fuel_mass (float): The current mass of the fuel in kg.
+        initial_fuel_mass (float): The initial mass of the fuel at launch in kg.
+        vacuum_isp (float): Specific impulse in vacuum in seconds.
+        vacuum_thrust (float): Maximum thrust in vacuum in Newtons.
+        propellant_type (str): Type of propellant ('liquid' or 'solid').
+        mass_flow_max (float): Maximum mass flow rate in kg/s (calculated).
+        exit_pressure (float): Engine nozzle exit pressure in Pascals (calculated).
+        nozzle_area (float): Area of the engine nozzle exit in m^2 (calculated).
+        exhaust_velocity (float): Effective exhaust velocity in m/s (calculated).
+    """
     dry_mass: float
     fuel_mass: float
     initial_fuel_mass: float
@@ -33,12 +47,33 @@ class Stage:
 
 @dataclass
 class EngineState:
+    """Tracks the current operating state of the rocket engine.
+
+    Attributes:
+        running (bool): True if the engine is currently active/burning.
+        throttle (float): Current throttle level from 0.0 to 1.0.
+        gimbal_angle (float): Engine nozzle deflection angle in radians.
+    """
     running: bool = False
     throttle: float = 0.0 # 0.0 to 1.0
     gimbal_angle: float = 0.0 # Radians, deflection from centerline
 
 
 class Rocket:
+    """Represents a multi-stage rocket vehicle.
+
+    Manages the vehicle's physical state, stages, engine operation, and telemetry.
+    Supports multi-stage configurations, though initialized as a single stage by default.
+
+    Attributes:
+        stages (list[Stage]): List of rocket stages.
+        position (numpy.ndarray): Position vector [x, y] in meters relative to planet center.
+        velocity (numpy.ndarray): Velocity vector [vx, vy] in m/s.
+        orientation (float): Vehicle pitch angle/orientation in radians (0 is vertical?).
+        omega (float): Angular velocity in rad/s.
+        temperature (float): Current surface temperature in Kelvin.
+        status (str): Current mission status (e.g., "PRELAUNCH", "THRUSTING").
+    """
     def __init__(self, dry_mass, fuel_mass, isp, max_thrust, propellant_type="liquid", cop_offset=1.0):
         # Initial Single Stage logic (Backward Compatibility)
         stage1 = Stage(dry_mass, fuel_mass, fuel_mass, isp, max_thrust, propellant_type)
@@ -162,6 +197,16 @@ class Rocket:
         return (1.0/12.0) * self.total_mass * (self.length**2)
 
     def get_drag_coefficient(self, mach):
+        """Calculates the drag coefficient (Cd) based on Mach number.
+
+        Approximates the transonic drag rise and supersonic decay.
+
+        Args:
+            mach (float): The current Mach number of the vehicle.
+
+        Returns:
+            float: The drag coefficient.
+        """
         # Piecewise Cd(Mach)
         # Subsonic: Costant ~ 0.3
         # Transonic (0.8 - 1.2): Rise to 0.7-0.9
@@ -184,9 +229,18 @@ class Rocket:
             return 0.4 + (0.9 - 0.4) * np.exp(-(mach - 1.05))
 
     def get_thrust(self, ambient_pressure):
-        """
-        Calculates thrust based on ambient pressure.
+        """Calculates the instantaneous thrust vector and mass flow rate.
+
+        Computes thrust using the standard rocket thrust equation:
         F = m_dot * Ve + (Pe - Pa) * Ae
+
+        Args:
+            ambient_pressure (float): The local atmospheric pressure in Pascals.
+
+        Returns:
+            tuple[float, float]: A tuple containing:
+                - total_thrust (float): The total thrust force in Newtons.
+                - mass_flow (float): The current mass flow rate in kg/s.
         """
         if not self.engine.running or not self.current_stage or self.current_stage.fuel_mass <= 0:
             return 0.0, 0.0
@@ -214,6 +268,14 @@ class Rocket:
         return t
 
     def burn_fuel(self, dt):
+        """Consumes fuel based on current engine state and time step.
+
+        Reduces the fuel mass of the current stage. Automatically shuts down the engine
+        if fuel is depleted.
+
+        Args:
+            dt (float): The time step duration in seconds.
+        """
         if not self.engine.running or not self.current_stage or self.current_stage.fuel_mass <= 0:
              return
             
@@ -234,7 +296,12 @@ class Rocket:
             # Don't print, handle in simulation
     
     def separate_stage(self):
-        """Drops current stage."""
+        """Separates the active stage and activates the next stage.
+
+        Returns:
+            float: The impulse velocity (delta-v) imparted by the separation mechanism (m/s).
+                   Returns 0.0 if no further stages exist.
+        """
         if self.active_stage_index >= len(self.stages) - 1:
             return 0.0 # No more stages
             
@@ -251,6 +318,10 @@ class Rocket:
         return 10.0 # m/s delta-v jump
 
     def ignite_engine(self):
+        """Ignites the rocket engine of the current stage.
+
+        For solid motors, prevents restart if previously ignited.
+        """
         if self.propellant_type == "solid" and self.has_ignited:
              print("IGNITION FAILURE: Cannot restart Solid Rocket Motor")
              return
@@ -260,6 +331,10 @@ class Rocket:
         self.has_ignited = True
     
     def cutoff_engine(self):
+        """Shuts down the rocket engine.
+
+        For solid motors, shutdown may not be physically possible (acts as abstract destruct/abort).
+        """
         if self.propellant_type == "solid":
              # Allow termination (Abort) but effectively engine is destroyed?
              pass

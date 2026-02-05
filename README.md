@@ -1,113 +1,71 @@
-# 2D-Rocket-Simulator
+# UTKRAMA
+**Unified Trajectory and Kinematics for Rocket Ascent Modeling and Analysis**
 
-A real-time 2D rocket simulator built in Python that models suborbital rocket launch, powered ascent, cutoff, ballistic coast, atmospheric re-entry, parachute recovery, and optional retro-braking.
+UTKRAMA is a physics-based, modular 2D launch vehicle simulation framework designed for guidance, control, and trajectory experimentation across multiple planetary environments. The framework integrates rigid-body dynamics, aerodynamic stability modeling, propulsion systems, closed-loop guidance, and automated experimentation tools.
 
-The simulator supports both **solid** and **liquid** propulsion logic, real-time guidance, dynamic thrust control, drag, mass flow, and a full event/status system.
+This repository preserves the evolution of the simulator:
 
-This project is designed as a learning platform for **GNC concepts**, **flight dynamics**, and **mission sequencing**.
+```v1.0/``` – Initial proof-of-concept
 
----
+```v2.0/``` – Intermediate stabilized architecture
 
-## Features
-
-### Mission Modes
-- **Suborbital flights**
-- Target apogee control
-- Safety margin based engine cutoff (liquid)
-
-### Propulsion
-- **Solid propellant**
-  - Continuous burn until fuel exhaustion
-- **Liquid propellant**
-  - Thrust cutoff and optional re-ignition based on trajectory and predicted apogee
-  - Optional **retro-braking during re-entry**
-
-### Flight Phases
-- READY  
-- THRUSTING  
-- CUTOFF (liquid only)  
-- COASTING  
-- RE-ENTRY  
-- RETRO BRAKE (liquid + enabled)  
-- CHUTES DEPLOYED  
-- LANDED  
-- ABORT  
-
-### Physics & Environment
-- Variable mass with mass flow
-- Atmospheric density model
-- Aerodynamic drag
-- Dynamic pressure (Max-Q)
-- Gravity
-- Drogue + Main parachute system
-- Orientation tied to velocity vector
-- Retrograde braking support
-
-### Visualization
-- Real-time rocket attitude view
-- Downrange vs Altitude trajectory
-- Time vs Altitude plot
-- Time vs Velocity plot
-- HUD with live telemetry
-
-### Controls
-- Launch / Abort / Close
-- Time warp: **1×, 2×, 4×, 8×**
-- Mission configuration dialog
+```utkrama/``` – Final research-grade framework used in the IEEE paper
 
 ---
 
-## Requirements
+# Associated Paper
 
-- Python 3.9+
-- NumPy
-- SciPy
-- Matplotlib
-- PySide6
+Varun Vivek Pai,
+UTKRAMA: A Modular Physics-Based 2D Launch Vehicle Simulation Framework with Guidance, Control, and Experimental Instrumentation, 2026.
 
-Install dependencies:
+---
+
+## Key Capabilities
+- Physics-based rigid body dynamics with RK4 integration
+- Multi-planetary environments (Earth, Mars, Moon, Venus, Mercury, Pluto)
+- Atmospheric and aerodynamic modeling with Mach dependence
+- Gravity turn and closed-loop apoapsis targeting guidance
+- Aerodynamic stability and control via thrust vectoring
+- Re-entry, retro-braking, and two-stage parachute descent
+- Automated Monte Carlo testing and parameter sweeps
+- Deterministic, reproducible simulation runs
+
+---
+
+## Why UTKRAMA?
+
+UTKRAMA is designed as a **research and education platform**, not a game engine.
+It enables rapid prototyping and experimental evaluation of guidance and control
+algorithms under realistic physical constraints.
+
+---
+
+## Getting Started
 
 ```bash
-pip install numpy scipy matplotlib PySide6
+git clone https://github.com/vvpai9/utkrama-simulation.git
+cd utkrama-simulation
+pip install -r requirements.txt
+python main.py
 ```
 
 ---
 
-## How to Run
-1. Clone the repository
-```
-git clone https://github.com/vvpai9/2D-Rocket-Simulator
-```
-2. Run ```main.py```
-```
-cd 2D-Rocket-Simulator
-python3 main.py
-```
-3. Configure mission parameters:
-  - Target Apogee
-  - Fuel mass
-  - Propellant Type
-  - Retro-Braking (liquid only)
-4. Click ```Start Mission```
-5. Press ```Launch```
+# License + Citation
+
+See ```LICENSE``` and ```CITATION.cff```
 
 ---
 
-## Status
+## Paper ↔ Code Mapping
 
-Suborbital mode is stable and validated for:
-  - Solid propulsion
-  - Liquid propulsion
-  - Retro-braking
-  - Safe parachute recovery
-
-**Orbital launch mode is currently under development in a separate branch**
-
----
-## Author
-
-Developed by Varun Vivek Pai
-Electronics & Communication Engineering
-Focus: Flight dynamics, guidance & aerospace simulation
+| Paper Section | Code Location |
+|--------------|---------------|
+| RK4 Integration | utkrama/src/core/simulation.py |
+| Aerodynamics | utkrama/src/core/physics.py |
+| Stability Analysis | utkrama/tests/test_stability.py |
+| Guidance Laws | utkrama/src/core/guidance.py |
+|--------------|---------------|
 
 ---
+

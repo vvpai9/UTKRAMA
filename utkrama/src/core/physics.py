@@ -7,6 +7,15 @@ from dataclasses import dataclass
 
 @dataclass
 class EnvironmentState:
+    """Represents the atmospheric and gravitational state at a specific point.
+
+    Attributes:
+        density (float): Atmospheric density in kg/m^3.
+        pressure (float): Atmospheric pressure in Pascals (Pa).
+        temperature (float): Ambient temperature in Kelvin (K).
+        speed_of_sound (float): Speed of sound in the medium in m/s.
+        gravity (float): Gravitational acceleration at this radius in m/s^2.
+    """
     density: float          # kg/m^3
     pressure: float         # Pa
     temperature: float      # K
@@ -14,6 +23,21 @@ class EnvironmentState:
     gravity: float          # m/s^2
 
 class Planet:
+    """Represents a celestial body with gravitational and atmospheric properties.
+
+    This class encapsulates the physical constants of a planet and provides methods
+    to calculate gravity and atmospheric properties at varying altitudes.
+
+    Attributes:
+        name (str): The name of the planet.
+        radius (float): The planetary radius in meters.
+        mass (float): The mass of the planet in kilograms.
+        mu (float): The standard gravitational parameter (G * mass) in m^3/s^2.
+        atmosphere_height (float): The altitude limit of the atmosphere in meters.
+        surface_pressure (float): The atmospheric pressure at surface level in Pascals.
+        scale_height (float): The scale height for the exponential atmosphere model in meters.
+        color (str): The visual color representation of the planet.
+    """
     def __init__(self, name, radius, mass, atmosphere_height, surface_pressure, scale_height, color):
         self.name = name
         self.radius = radius            # meters
@@ -45,16 +69,33 @@ class Planet:
 
     @property
     def has_atmosphere(self):
+        """Checks if the planet has an atmosphere."""
         return self.atmosphere_height > 0
 
     def get_gravity(self, r):
-        """Calculates gravitational acceleration at distance r from center."""
+        """Calculates gravitational acceleration at a given radial distance.
+
+        Args:
+            r (float): The distance from the center of the planet in meters.
+
+        Returns:
+            float: The gravitational acceleration in m/s^2.
+        """
         return self.mu / (r**2)
 
     def query_environment(self, altitude, t=0.0) -> EnvironmentState:
-        """
-        Query the environment state at a given altitude.
-        Time 't' is included for future expansion (wind, solar flux, seasonal).
+        """Queries the environmental state at a specific altitude.
+
+        Determines the gravity, air density, pressure, temperature, and speed of sound
+        based on the planet's atmospheric model (Standard or Exponential).
+
+        Args:
+            altitude (float): The altitude above the planet's surface in meters.
+            t (float, optional): The simulation time in seconds. Defaults to 0.0.
+                                 Reserved for future dynamic atmosphere effects.
+
+        Returns:
+            EnvironmentState: An object containing the physical properties of the environment.
         """
         g = self.get_gravity(self.radius + altitude)
         

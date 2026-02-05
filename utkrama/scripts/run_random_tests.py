@@ -77,7 +77,6 @@ def run_simulation_headless(config, output_dir):
     
     while sim.time < max_time:
         sim.step(dt)
-        sim.time += dt
         
         # Collect Data
         times.append(sim.time)
@@ -97,14 +96,20 @@ def run_simulation_headless(config, output_dir):
         downranges.append(downrange)
         status_history.append(state.status)
         
-        if hasattr(state, 'q') and state.q > max_q:
-            max_q = state.q
+        rho = sim.planet.atmosphere_density(alt)
+        q = 0.5 * rho * vel_mag**2
+        max_q = max(max_q, q)
+
             
         if state.status in ["CRASHED", "LANDED", "ABORT"]:
             break
             
     # Metrics
-    success = (sim.rocket.status == "LANDED") # Or just reaching orbit? 
+    success = (
+        sim.rocket.max_apoapsis_km >= config['target_apoapsis'] - config['safety_margin']
+        and sim.rocket.status not in ["CRASHED", "ABORT"]
+    )
+ # Or just reaching orbit?
     # User said "successful and failure scenarios". 
     # Usually success means reaching target apoapsis? 
     # Or simplified: Did it crash?

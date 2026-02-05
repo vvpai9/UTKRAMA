@@ -1,9 +1,0 @@
-Mission Log - Planet: Pluto - Target: 100.0km
---------------------------------------------------
-[0.0s] LAUNCH INITIATED
-[6.4s] Time Warp set to 8x
-[8.7s] MECO at 1.5km. Apo: 107.3km
-[639.5s] APOAPSIS REACHED at 107.27 km
-[806.7s] RE-ENTRY PHASE STARTED (Ballistic alignment)
-[1234.8s] Time Warp set to 1x
-[1308.8s] TOUCHDOWN CONFIRMED

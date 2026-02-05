@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "UTKRAMA: Unified Trajectory and Kinematics for Rocket Ascent and Mission Analysis"
+authors:
+  - family-names: Pai
+    given-names: Varun Vivek
+version: 1.0.0
+date-released: 2026-02-05
+url: https://github.com/vvpai9/utkrama-simulation
+preferred-citation:
+  type: conference-paper
+  title: "UTKRAMA: A Modular Physics-Based 2D Launch Vehicle Simulation Framework"

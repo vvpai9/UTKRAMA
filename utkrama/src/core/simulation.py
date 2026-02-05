@@ -7,6 +7,18 @@ from src.core.utils import calculate_orbital_elements
 
 @dataclass
 class State:
+    """Represents the complete physical state of the rocket at a point in time.
+
+    Attributes:
+        x (float): X-coordinate position relative to planet center (meters).
+        y (float): Y-coordinate position relative to planet center (meters).
+        vx (float): X-component of velocity (m/s).
+        vy (float): Y-component of velocity (m/s).
+        mass (float): Total mass of the vehicle (kg).
+        temperature (float): Surface temperature (Kelvin).
+        theta (float): Orientation angle relative to inertial frame (radians).
+        omega (float): Angular velocity (rad/s).
+    """
     x: float
     y: float
     vx: float
@@ -17,13 +29,29 @@ class State:
     omega: float # Angular velocity (rad/s)
 
     def to_array(self):
+        """Converts the state to a numpy array for integration."""
         return np.array([self.x, self.y, self.vx, self.vy, self.mass, self.temperature, self.theta, self.omega])
 
     @staticmethod
     def from_array(arr):
+        """Creates a State object from a numpy array."""
         return State(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7])
 
 class Simulation:
+    """Manages the physics simulation, time stepping, and mission logic.
+
+    Integrates the equations of motion using RK4, handles event detection (staging, landing),
+    and logs telemetry data.
+
+    Attributes:
+        planet (Planet): The celestial body being simulated.
+        rocket (Rocket): The vehicle being simulated.
+        guidance (GuidanceSystem): The guidance logic controller.
+        time (float): Current simulation time in seconds.
+        dt (float): Simulation time step in seconds.
+        history (dict): Dictionary storing time-series telemetry data.
+        mission_outcome (str): Final status of the mission (e.g., "SUCCESS", "FAILED").
+    """
     def __init__(self):
         self.planet = PLANETS['Earth']
         self.rocket = None
@@ -57,6 +85,9 @@ class Simulation:
         self.logger = None
         self._apoapsis_reached = False
         self.max_g_so_far = 0.0 # Track Max G for Display
+        self.max_q_value = 0.0 # Track Max Q
+        self.events = [] # List of {'label': str, 'time': float}
+        self._events_triggered = set() # To avoid duplicates
         self.mission_outcome = None # REJECTED, ABORTED, FAILED, SUCCESS
         
     def set_logger(self, callback):
@@ -97,8 +128,21 @@ class Simulation:
         self.rocket.omega = 0.0
         self.rocket.status = "PRELAUNCH"
     def check_feasibility(self, planet_name, target_apo_km, dry_mass, fuel_mass, propellant_type, safety_margin_km=0):
-        """
-        Returns (is_feasible, reason, rocket_dv, required_dv, extra_fuel_needed)
+        """Analyzes mission feasibility based on physics constraints/delta-v.
+
+        Estimates the required delta-v for the target orbit and compares it against
+        the rocket's capabilities (Tsiolkovsky equation, TWR).
+
+        Args:
+            planet_name (str): Name of the target planet.
+            target_apo_km (float): Desired apoapsis altitude in kilometers.
+            dry_mass (float): Structure mass in kg.
+            fuel_mass (float): Propellant mass in kg.
+            propellant_type (str): 'liquid' or 'solid'.
+            safety_margin_km (float): Extra altitude buffer in km.
+
+        Returns:
+            tuple: (is_feasible (bool), reason (str), rocket_dv (float), required_dv (float), extra_fuel_needed (float))
         """
         planet = PLANETS.get(planet_name, PLANETS['Earth'])
         target_r = planet.radius + target_apo_km * 1000
@@ -236,6 +280,19 @@ class Simulation:
         return is_feasible, None, rocket_dv, req_dv, extra_fuel
 
     def compute_forces(self, state: State, t: float):
+        """Calculates the net forces and state derivatives for the rocket.
+
+        Computes gravity, aerodynamic drag (blunt body + rocket), thrust (pressure adjusted),
+        aerodynamic stability torque, and RCS/gimbal control torque.
+
+        Args:
+            state (State): The current physical state of the vehicle.
+            t (float): Current simulation time.
+
+        Returns:
+            tuple: (state_derivative (numpy.ndarray), g_load (float))
+                   state_derivative contains [vx, vy, ax, ay, dm/dt, dT/dt, omega, alpha].
+        """
         # 1. Environment
         r_mag = np.sqrt(state.x**2 + state.y**2)
         altitude = r_mag - self.planet.radius
@@ -517,6 +574,11 @@ class Simulation:
         return self.compute_forces(state, t)
 
     def rk4_step(self, dt):
+        """Advances the simulation state by `dt` seconds using the Runge-Kutta 4 method.
+
+        Args:
+            dt (float): Time step in seconds.
+        """
         y = self.current_state_y()
         t = self.time
         
@@ -555,6 +617,14 @@ class Simulation:
              self.rocket.cutoff_engine()
 
     def step(self, dt):
+        """Executes one full simulation cycle.
+
+        Includes guidance updates, control loop execution (PID), state integration,
+        event handling (MECO, staging), and telemetry recording.
+
+        Args:
+            dt (float): Time step in seconds.
+        """
         if self.rocket.status in ["CRASHED", "LANDED", "ABORT"]:
             return
 
@@ -645,6 +715,10 @@ class Simulation:
                   self.rocket.velocity = np.zeros(2)
                   # If we have enough
              
+             # Max Q Tracking
+             if self.rocket.q > self.max_q_value:
+                  self.max_q_value = self.rocket.q
+
              pitch_from_vertical = self.guidance.get_steering_command(self.rocket, altitude, vel, self.planet)
              # Convert to World Theta (0=Horizontal Right, 90=Vertical Up)
              # Guidance: 0=Up.
@@ -831,6 +905,7 @@ class Simulation:
              if self.rocket.status not in ["PRELAUNCH", "CRASHED", "LANDED"] and not self._apoapsis_reached:
                  if radial_v < 0 and self.time > 10.0: # Check radial V, ensure launched
                      self._apoapsis_reached = True
+                     self._record_event("APOGEE")
                      alt_km = (np.linalg.norm(self.rocket.position) - self.planet.radius) / 1000.0
                      self.log(f"APOAPSIS REACHED at {alt_km:.2f} km")
 
@@ -964,4 +1039,9 @@ class Simulation:
              return "SUCCESS"
         
         return f"FAILED (Did not reach target. Apo: {self._achieved_apoapsis/1000:.1f}km / {self.target_apoapsis/1000:.0f}km)"
+
+    def _record_event(self, label):
+        if label not in self._events_triggered:
+            self._events_triggered.add(label)
+            self.events.append({'label': label, 'time': self.time, 'altitude': (np.linalg.norm(self.rocket.position) - self.planet.radius)})
 

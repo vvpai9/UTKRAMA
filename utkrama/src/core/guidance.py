@@ -1,6 +1,16 @@
 import numpy as np
 
 class GuidanceSystem:
+    """Manages the flight guidance logic for the rocket.
+
+    Controls the vehicle's pitch and engine state (in select modes) to achieve
+    target mission parameters (e.g., target apoapsis).
+
+    Attributes:
+        target_apoapsis (float): The target orbit apoapsis in meters.
+        switch_altitude (float): The altitude at which to switch from open-loop to closed-loop guidance.
+        mode (str): Current guidance mode ("OPEN_LOOP" or "CLOSED_LOOP").
+    """
     def __init__(self, target_apoapsis, switch_altitude=30000):
         self.target_apoapsis = target_apoapsis
         self.switch_altitude = switch_altitude # Meters
@@ -8,12 +18,20 @@ class GuidanceSystem:
         self.log_callback = None
 
     def set_logger(self, callback):
+        """Sets the logging callback function."""
         self.log_callback = callback
 
     def get_steering_command(self, rocket, altitude, velocity_vector, planet):
-        """
-        Returns the target pitch angle (radians) from vertical.
-        0 = Vertical, pi/2 = Horizontal.
+        """Determines the target pitch angle for the current flight state.
+
+        Args:
+            rocket (Rocket): The rocket instance.
+            altitude (float): Current altitude in meters.
+            velocity_vector (numpy.ndarray): Current velocity vector [vx, vy] in m/s.
+            planet (Planet): The planet being orbited.
+
+        Returns:
+            float: The command pitch angle in radians (from vertical, or world frame depending on convention).
         """
         
         # Simple Logic:
@@ -42,6 +60,10 @@ class GuidanceSystem:
             return self._closed_loop_guidance(rocket, altitude, velocity_vector)
 
     def _open_loop_guidance(self, altitude, propellant_type="liquid", planet=None, velocity_vector=None):
+        """Executes the open-loop phase of the flight (Gravity Turn).
+
+        Calculates pitch based on a predefined altitude-pitch profile.
+        """
         # Simple gravity turn profile
         
         turn_end_alt = 80000 # 80km default
@@ -68,6 +90,11 @@ class GuidanceSystem:
         return fraction * np.deg2rad(80)
 
     def _closed_loop_guidance(self, rocket, altitude, velocity_vector):
+        """Executes the closed-loop phase of the flight.
+
+        Adjusts pitch to optimize orbit insertion or maintain trajectory.
+        This is a simplified implementation for a 2D simulation.
+        """
         # Very simple "Velocity Search" or "Pitch for Apoapsis"
         # If Ap < Target, pitch up slightly or stay optimal?
         

@@ -9,6 +9,18 @@ import numpy as np
 import random
 
 class Particle:
+    """Represents a visual particle for effects (e.g., explosions).
+
+    Attributes:
+        x (float): X-coordinate in world space.
+        y (float): Y-coordinate in world space.
+        vx (float): Velocity X in m/s.
+        vy (float): Velocity Y in m/s.
+        life (float): Remaining life in seconds.
+        max_life (float): Initial life in seconds.
+        color (QColor): Color of the particle.
+        size (float): Display size of the particle.
+    """
     def __init__(self, x, y, vx, vy, life, color, size):
         self.x = x
         self.y = y
@@ -20,6 +32,16 @@ class Particle:
         self.size = size
 
 class Camera:
+    """Manages the view transformation for the visualization.
+
+    Handles zooming, panning, and world-to-screen coordinate conversion.
+
+    Attributes:
+        x (float): Camera center X coordinate in world space.
+        y (float): Camera center Y coordinate in world space.
+        zoom (float): Current zoom level (pixels per meter).
+        target_zoom (float): Target zoom level for smooth transitions.
+    """
     def __init__(self):
         self.x = 0.0
         self.y = 0.0
@@ -27,7 +49,12 @@ class Camera:
         self.target_zoom = 1.0
         
     def teleport(self, x, y):
-        """Immediately moves camera to target."""
+        """Immediately moves camera to target coordinates.
+
+        Args:
+            x (float): Target X coordinate.
+            y (float): Target Y coordinate.
+        """
         self.x = x
         self.y = y
         # Reset zoom too? maybe to default surface zoom
@@ -35,6 +62,12 @@ class Camera:
         self.target_zoom = 10.0
         
     def update(self, target_pos, dt):
+        """Updates camera position and zoom to follow a target.
+
+        Args:
+            target_pos (tuple): Target (x, y) coordinates.
+            dt (float): Time step in seconds.
+        """
         # Smooth Follow
         # target_pos is (x, y) tuple or list
         # Simple Lerp
@@ -46,6 +79,17 @@ class Camera:
         self.zoom += (self.target_zoom - self.zoom) * 5.0 * dt
 
     def world_to_screen(self, wx, wy, width, height):
+        """Converts world coordinates to screen coordinates.
+
+        Args:
+            wx (float): World X.
+            wy (float): World Y.
+            width (float): Screen width.
+            height (float): Screen height.
+
+        Returns:
+            tuple: (screen_x, screen_y)
+        """
         # Center of screen is camera position
         # Screen X = (World X - Cam X) * Zoom + Width/2
         # Screen Y = (World Y - Cam Y) * Zoom * -1 (Flip Y) + Height/2
@@ -56,6 +100,17 @@ class Camera:
         return sx, sy
         
     def screen_to_world(self, sx, sy, width, height):
+        """Converts screen coordinates to world coordinates.
+
+        Args:
+            sx (float): Screen X.
+            sy (float): Screen Y.
+            width (float): Screen width.
+            height (float): Screen height.
+
+        Returns:
+            tuple: (world_x, world_y)
+        """
         # Inverse
         # (sx - w/2) / zoom + cam_x = wx
         wx = (sx - width/2) / self.zoom + self.x
@@ -97,6 +152,11 @@ class StarField:
             if s[1] < -1000: s[1] += 2000
 
 class RocketView(QWidget):
+    """Custom widget for rendering the rocket simulation in real-time.
+
+    Draws the planet horizon, atmospheric gradient, star field, rocket body,
+    trajectory lines, and particle effects.
+    """
     def __init__(self, simulation):
         super().__init__()
         self.simulation = simulation
@@ -164,6 +224,7 @@ class RocketView(QWidget):
             self.dragging = False
 
     def paintEvent(self, event):
+        """Handles the painting of the simulation scene."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
@@ -473,14 +534,44 @@ class RocketView(QWidget):
              painter.drawPolygon(path_out)
 
         # Chutes
+        # Chutes
         if rocket.status == "MAIN_CHUTE":
-             painter.setBrush(QBrush(QColor(255, 100, 100)))
+             # Large Main Chute
+             painter.setBrush(QBrush(QColor(255, 100, 100))) # Red
+             painter.setPen(QPen(QColor(255, 255, 255), 2))
+             
+             # Cords (Triangle fan)
+             # Top of rocket is at (0, -h/2).
+             # Chute base at (0, -h/2 - 120)
+             
+             # Draw 3 lines
+             painter.drawLine(QPointF(-10, -h/2), QPointF(-50, -h/2 - 120))
+             painter.drawLine(QPointF(0, -h/2), QPointF(0, -h/2 - 120))
+             painter.drawLine(QPointF(10, -h/2), QPointF(50, -h/2 - 120))
+             
+             # Canopy (Pie)
+             painter.drawPie(QRectF(-80, -h/2 - 200, 160, 100), 0, 180*16)
+        
+        elif rocket.status == "DROGUE_CHUTE":
+             # Smaller Drogue Chute
+             painter.setBrush(QBrush(QColor(255, 165, 0))) # Orange
              painter.setPen(QPen(QColor(255, 255, 255), 1))
-             painter.drawLine(QPointF(0, -h/2), QPointF(0, -h/2-80))
-             painter.drawPie(QRectF(-60, -h/2 - 140, 120, 80), 0, 180*16)
+             
+             # Cords
+             painter.drawLine(QPointF(0, -h/2), QPointF(0, -h/2 - 60))
+             painter.drawLine(QPointF(-5, -h/2), QPointF(-20, -h/2 - 60))
+             painter.drawLine(QPointF(5, -h/2), QPointF(20, -h/2 - 60))
+             
+             # Canopy
+             painter.drawPie(QRectF(-30, -h/2 - 90, 60, 40), 0, 180*16)
 
 
 class PlotWidget(QWidget):
+    """A comprehensive widget for plotting telemetry data using Matplotlib.
+
+    Integrates a Matplotlib FigureCanvas given the Qt widget structure. 
+    Supports real-time data updates, blinking cursor for current value, and event annotations.
+    """
     def __init__(self, title, xlabel, ylabel):
         super().__init__()
         self.layout = QVBoxLayout()
@@ -489,11 +580,14 @@ class PlotWidget(QWidget):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
         
+        # Store for re-init
+        self.plot_title = title
+        self.x_label_text = xlabel
+        self.y_label_text = ylabel
+        
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_title(title, fontsize=10)
-        self.ax.set_xlabel(xlabel, fontsize=8)
-        self.ax.set_ylabel(ylabel, fontsize=8)
-        self.ax.tick_params(axis='both', which='major', labelsize=8)
+        self._setup_ax()
+        
         # Explicit margins to ensure labels are never cut off
         self.figure.subplots_adjust(top=0.85, bottom=0.25, left=0.20, right=0.95)
         self.line, = self.ax.plot([], [], 'b-')
@@ -508,6 +602,13 @@ class PlotWidget(QWidget):
         self._blink_timer.start(500) # 500ms
         self._point_visible = True
         
+    def _setup_ax(self):
+        self.ax.set_title(self.plot_title, fontsize=10)
+        self.ax.set_xlabel(self.x_label_text, fontsize=8)
+        self.ax.set_ylabel(self.y_label_text, fontsize=8)
+        self.ax.tick_params(axis='both', which='major', labelsize=8)
+        self.ax.grid(True, alpha=0.3)
+
     def _toggle_point(self):
         if not self.x_data:
             return
@@ -528,9 +629,30 @@ class PlotWidget(QWidget):
         self.ax.autoscale_view()
         self.canvas.draw_idle()
         
+    
+    def add_annotation(self, text, x):
+        """Adds a vertical line and text label at x."""
+        self.ax.axvline(x=x, color='gray', linestyle='--', linewidth=0.8, alpha=0.5)
+        # Alternate height to avoid overlap?
+        # y_pos relative to axes (0 to 1)
+        y_pos = 0.9 - (len(self.ax.texts) % 3) * 0.1
+        
+        self.ax.text(x, y_pos, text, transform=self.ax.get_xaxis_transform(), 
+                     fontsize=8, color='white', rotation=0, 
+                     bbox=dict(boxstyle="round,pad=0.2", fc="gray", ec="none", alpha=0.5))
+        self.canvas.draw_idle()
+
     def clear(self):
         self.x_data = []
         self.y_data = []
         self.line.set_data([], [])
         self.point.set_data([], [])
+        self.ax.texts.clear() # Clear Annotations
+        # Clear lines? ax.lines includes the main plot line.
+        # So we need to be careful.
+        # Re-init plot
+        self.ax.clear()
+        self._setup_ax()
+        self.line, = self.ax.plot([], [], 'b-')
+        self.point, = self.ax.plot([], [], 'ro')
         self.canvas.draw_idle()

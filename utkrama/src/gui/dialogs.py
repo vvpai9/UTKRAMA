@@ -3,6 +3,11 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
 from src.core.physics import PLANETS
 
 class LaunchConfigDialog(QDialog):
+    """Modal dialog for configuring mission parameters before launch.
+    
+    Allows the user to set target apoapsis, safety margin, propellant type,
+    and mass configuration. Performs feasibility checks using the simulation engine.
+    """
     def __init__(self, simulation):
         super().__init__()
         self.simulation = simulation
@@ -43,6 +48,7 @@ class LaunchConfigDialog(QDialog):
         self.setLayout(layout)
 
     def check_feasibility(self):
+        """Validates inputs and checks mission feasibility against physics constraints."""
         try:
             apo = float(self.apoapsis_input.text())
             margin = float(self.safety_margin_input.text())

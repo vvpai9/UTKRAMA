@@ -1,0 +1,4 @@
+Mission Log - Planet: Earth - Target: 100.0km
+--------------------------------------------------
+[0.0s] LAUNCH INITIATED
+[21.8s] !!! MISSION ABORTED !!!

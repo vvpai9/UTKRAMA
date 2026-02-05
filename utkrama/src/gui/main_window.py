@@ -6,9 +6,15 @@ from src.gui.widgets import RocketView, PlotWidget
 from src.gui.dialogs import LaunchConfigDialog
 
 class MainWindow(QMainWindow):
+    """The main application window for the Utkrama Rocket Simulator.
+
+    Orchestrates the GUI layout, including the rocket view, telemetry plots,
+    control panel, and command console. Manages the simulation loop timer and
+    user interactions.
+    """
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Vimana: 2D Rocket Simulator")
+        self.setWindowTitle("Utkrama: 2D Rocket Simulator")
         self.setGeometry(100, 100, 1200, 800)
         
         self.simulation = Simulation()
@@ -35,7 +41,7 @@ class MainWindow(QMainWindow):
         self.console_panel = QWidget()
         console_layout = QVBoxLayout()
         
-        self.telemetry_label = QLabel("Waiting for Launch Configuration...")
+        self.telemetry_label = QLabel("Utkrama: Unified Trajectory and Kinematics for Rocket Ascent and Mission Analysis\nWaiting for Launch Configuration...")
         self.telemetry_label.setStyleSheet("font-family: Monospace; font-size: 12px; background-color: black; color: lime; padding: 10px;")
         self.telemetry_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         
@@ -215,6 +221,11 @@ class MainWindow(QMainWindow):
                 pass
 
     def update_simulation(self):
+        """Advances the simulation state and updates the GUI.
+
+        Called by QTimer. Handles time warping by executing multiple physics steps
+        per frame if necessary. Updates telemetry displays and the visualizer.
+        """
         # Run simulation steps
         # dt = 0.1s in simulation.
         # If timer is 50ms (0.05s) real time.
@@ -271,7 +282,7 @@ Status: {r.status}
 Fuel: {r.fuel_mass:.1f} kg
 Throttle: {r.engine.throttle*100:.0f}%
 Temp: {r.temperature - 273.15:.0f} C
-Dynamic Q: {q:.0f} Pa
+Dynamic Q: {q:.0f} Pa (Max: {self.simulation.max_q_value:.0f} Pa)
 G-Load: {r.g_load:.2f} G (Max: {self.simulation.max_g_so_far:.2f} G)
 
 Target Apoapsis: {self.simulation.target_apoapsis/1000:.1f} km
@@ -290,6 +301,37 @@ Achieved Apoapsis: {achieved/1000:.1f} km
             self.time_alt_plot.update_data(physics_time, alt/1000.0)
             self.time_vel_plot.update_data(physics_time, vel) # Vel remains m/s
             self.alt_range_plot.update_data(downrange/1000.0, alt/1000.0)
+            
+            # Check for New Events to Annotate
+            if hasattr(self.simulation, 'events'):
+                # We need to track which events we've already added.
+                # Store added count in self?
+                # Or just iterate. Events list is short.
+                # PlotWidget needs to know not to duplicate?
+                # Actually, PlotWidget just adds what we tell it.
+                # So we should only send NEW events.
+                
+                # Simple Hack: Store last_event_count
+                if not hasattr(self, '_last_event_count'): self._last_event_count = 0
+                
+                if len(self.simulation.events) > self._last_event_count:
+                    # New events found
+                    for i in range(self._last_event_count, len(self.simulation.events)):
+                        evt = self.simulation.events[i]
+                        label = evt['label']
+                        t = evt['time']
+                        
+                        # Add to Time plots
+                        self.time_alt_plot.add_annotation(label, t)
+                        self.time_vel_plot.add_annotation(label, t)
+                        
+                        # Add to Range plot? (Use Downrange instead of Time)
+                        # Not easy since we only have 'time' in event. 
+                        # Could record 'downrange' in event too?
+                        # For now, just Time plots.
+                        
+                    self._last_event_count = len(self.simulation.events)
+
         
         # Check specific events
         if r.status in ["CRASHED", "LANDED", "ABORT", "IMPACT DETECTED"]:
