@@ -11,12 +11,6 @@ This repository preserves the evolution of the simulator:
 
 ```utkrama/``` – Final research-grade framework used in the IEEE paper
 
----
-
-# Associated Paper
-
-Varun Vivek Pai,
-UTKRAMA: A Modular Physics-Based 2D Launch Vehicle Simulation Framework with Guidance, Control, and Experimental Instrumentation, 2026.
 
 ---
 
@@ -57,7 +51,7 @@ See ```LICENSE``` and ```CITATION.cff```
 
 ---
 
-## Paper ↔ Code Mapping
+## Code Mapping
 
 | Paper Section | Code Location |
 |--------------|---------------|
