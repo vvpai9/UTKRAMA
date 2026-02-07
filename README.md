@@ -9,7 +9,7 @@ This repository preserves the evolution of the simulator:
 
 ```v2.0/``` – Intermediate stabilized architecture
 
-```utkrama/``` – Final research-grade framework used in the IEEE paper
+```utkrama/``` – Final framework
 
 
 ---
@@ -53,7 +53,7 @@ See ```LICENSE``` and ```CITATION.cff```
 
 ## Code Mapping
 
-| Paper Section | Code Location |
+| Section | Code Location |
 |--------------|---------------|
 | RK4 Integration | utkrama/src/core/simulation.py |
 | Aerodynamics | utkrama/src/core/physics.py |
