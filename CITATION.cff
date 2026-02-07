@@ -5,7 +5,7 @@ authors:
     given-names: Varun Vivek
 version: 1.0.0
 date-released: 2026-02-05
-url: https://github.com/vvpai9/utkrama-simulation
+url: https://github.com/vvpai9/UTKRAMA
 preferred-citation:
   type: conference-paper
   title: "UTKRAMA: A Modular Physics-Based 2D Launch Vehicle Simulation Framework"
